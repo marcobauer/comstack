@@ -1,4 +1,4 @@
 comstack
 ========
 
-Simple Communication Stack
+Simple Communication Stack Library
