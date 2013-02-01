@@ -2,7 +2,7 @@
 #ifndef CHECKSUM_H_
 #define CHECKSUM_H_
 
-#include <Arduino.h>
+#include "arch_types.h"
 
 uint16_t checksumCRC16 ( uint8_t*, uint8_t* );
 
