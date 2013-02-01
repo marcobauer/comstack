@@ -2,7 +2,7 @@
 #include "DataFrame.h"
 #include "checksum.h"
 
-#include <string.h>
+#include "arch_types.h"
 
 #define HEAD_SIZE	  5
 
@@ -10,56 +10,56 @@ DataFrame::DataFrame()
 {
 }
 
-uint8_t DataFrame::buildFrame ( const char *data, uint16_t frame_cnt  )
+uint8_t DataFrame::buildFrame ( const uint8_t *data, uint16_t frame_cnt  )
 {
-	char buffer[ 128 + HEAD_SIZE ];
+	uint8_t buf[ 128 + HEAD_SIZE ];
 	uint8_t size;
 
-	uint8_t  data_len = snprintf( &buffer[HEAD_SIZE], 128, "%s", data );
-	uint16_t data_crc = checksumCRC16( (uint8_t*) &buffer[HEAD_SIZE],  (uint8_t*) &buffer[ HEAD_SIZE + data_len -1 ] );
+	uint8_t  data_len = (uint8_t) snprintf( (char*) &buf[HEAD_SIZE], 128, "%s", data );
+	uint16_t data_crc = checksumCRC16( (uint8_t*) &buf[HEAD_SIZE],  (uint8_t*) &buf[ HEAD_SIZE + data_len -1 ] );
 
-	buffer[0] = (uint8_t)( frame_cnt & 0xFF00 );
-	buffer[1] = (uint8_t)( frame_cnt & 0x00FF );
-	buffer[2] = (uint8_t)( data_crc  & 0xFF00 );
-	buffer[3] = (uint8_t)( data_crc  & 0x00FF );
-	buffer[4] = (uint8_t)( data_len );
+	buf[0] = (uint8_t)( frame_cnt & 0xFF00 );
+	buf[1] = (uint8_t)( frame_cnt & 0x00FF );
+	buf[2] = (uint8_t)( data_crc  & 0xFF00 );
+	buf[3] = (uint8_t)( data_crc  & 0x00FF );
+	buf[4] = (uint8_t)( data_len );
 
-	trimDLE( &buffer[0], data_len + HEAD_SIZE );
+	addDLE( &buf[0], data_len + HEAD_SIZE );
 
 	return size;
 }
 
-void DataFrame::trimDLE( char *buffer, uint8_t size)
+void DataFrame::addDLE( uint8_t *buf, uint8_t size)
 {
 	for(int i=0; i< size; i++ )
 	{
-		switch( buffer[i] )
+		switch( buf[i] )
 		{
 			case '\0':
-				addBuffer(SUB);
+				add(SUB);
 				break;
 			case STX:
-				addBuffer(DLE);
-				addBuffer(STX);
+				add(DLE);
+				add(STX);
 				break;
 
 			case ETX:
-				addBuffer(DLE);
-				addBuffer(ETX);
+				add(DLE);
+				add(ETX);
 				break;
 
 			case DLE:
-				addBuffer(DLE);
-				addBuffer(DLE);
+				add(DLE);
+				add(DLE);
 				break;
 
 			case SUB:
-				addBuffer(DLE);
-				addBuffer(SUB);
+				add(DLE);
+				add(SUB);
 				break;
 
 			default:
-				addBuffer(buffer[i]);
+				add(buf[i]);
 				break;
 
 		} // end of switch (character substitution)
