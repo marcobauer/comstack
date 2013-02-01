@@ -2,7 +2,8 @@
 #ifndef SERIALPROTOCOL_H_
 #define SERIALPROTOCOL_H_
 
-#include "Message.h"
+#include "TxMessage.h"
+#include "RxMessage.h"
 
 class SerialStack {
 
@@ -10,16 +11,16 @@ public:
 	SerialStack();
 	virtual ~SerialStack(){}
 
-	void alive();
-	boolean send( char *data );
+	boolean transmit( uint8_t *data );
+
+protected:
+	void receive( uint8_t *data, uint8_t size );
 
 private:
-	virtual uint16_t transmit( uint8_t * ) = 0;
-	virtual uint16_t receive( uint8_t * )  = 0;
+	virtual uint16_t writeData( uint8_t * ) = 0;
 
-	Message 	sendMessage;
-
-	unsigned long uptime, timestamp;
+	TxMessage txMessage;
+	RxMessage rxMessage;
 };
 
 #endif /* SERIALPROTOCOL_H_ */

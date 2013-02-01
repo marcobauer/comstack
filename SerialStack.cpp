@@ -1,28 +1,31 @@
 
 #include "SerialStack.h"
-#include <string.h>
-#include <Arduino.h>
+#include "arch_types.h"
 
-SerialStack::SerialStack( ) : timestamp( millis() ), uptime( 0 )
+SerialStack::SerialStack( )
+{}
+
+boolean SerialStack::transmit( uint8_t *data )
 {
-
-}
-
-void SerialStack::alive()
-{
-	char buf[30];
-
-    if( (millis() - this->timestamp) >= 5000) {
-    	this->timestamp = millis();
-    	this->uptime += 5;
-    	snprintf( &buf[0], 128, "Uptime:%d", this->uptime );
-    	this->send( &buf[0] );
-    }
-}
-
-boolean SerialStack::send( char *data )
-{
-	uint8_t size = sendMessage.create( data, Message::event );
-	this->transmit( sendMessage.data() );
+	uint8_t size = txMessage.create( data, TxMessage::event );
+	this->writeData( txMessage.data() );
 	return true;
 }
+
+void SerialStack::receive( uint8_t *data, uint8_t size )
+{
+
+
+
+
+	for(int i=0; i< size; i++){
+//		rxMessage
+	}
+
+//	for(int i =0 ; i< size; i++){
+//		receiveMessage.collect( data[i] );
+//	}
+
+
+}
+
