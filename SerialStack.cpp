@@ -1,31 +1,75 @@
 
 #include "SerialStack.h"
-#include "arch_types.h"
 
-SerialStack::SerialStack( )
+SerialStack::SerialStack() : pending_send(false)
 {}
 
-boolean SerialStack::transmit( uint8_t *data )
+void SerialStack::process()
 {
-	uint8_t size = txMessage.create( data, TxMessage::event );
-	this->writeData( txMessage.data() );
-	return true;
-}
+	thread_read();
+	thread_write();
 
-void SerialStack::receive( uint8_t *data, uint8_t size )
-{
+	if( dequeueRx( &rxMsgData ) ){
 
+		switch(rxMsgData.type)
+		{
+			case Message::request:
+				handle_request( &rxMsgData );
+				break;
 
+			case Message::response:
+				handle_response( &rxMsgData );
+				break;
 
+			case Message::event:
+				handle_event( &rxMsgData );
+				break;
 
-	for(int i=0; i< size; i++){
-//		rxMessage
+			default:
+				//! handle error
+				break;
+		}
 	}
-
-//	for(int i =0 ; i< size; i++){
-//		receiveMessage.collect( data[i] );
-//	}
-
-
 }
 
+void SerialStack::thread_read()
+{
+	/*!
+	 * 												Process received data
+	 ********************************************************************/
+	if( data_available() )
+	{
+		while ( data_available() )
+		{
+			payload.content[payload.size++] = data_read();
+			if( payload.size == MSG_DATA_MAX )
+				break;
+		}
+
+		enqueueRx( &payload );
+	}
+}
+
+void SerialStack::thread_write()
+{
+	/*!
+	 * 												Process transmit data
+	 ********************************************************************/
+	if( !pending_send )
+	{
+		if( dequeueTx( &payload ) )
+		{
+			payload.status = data_write( &payload );
+
+			if( payload.status == payload.size )
+			{
+				pending_send = false;
+				payload.status = 0;
+			}else
+				pending_send = true;
+		}
+	}else
+	{
+
+	}
+}
