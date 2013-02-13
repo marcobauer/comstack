@@ -7,7 +7,7 @@
 #if defined(UNITTEST)
 #define BUFFER_SIZE 10
 #else
-#define BUFFER_SIZE 512
+#define BUFFER_SIZE 254
 #endif
 
 /*!
@@ -16,12 +16,6 @@
 class DataBuffer {
 
 public:
-
-	enum Result {
-		overflow 	= 0x01, //!< Buffer overflow occus; @note Buffer reset was done
-		successful	= 0x02,	//!< Buffer access successful
-		empty		= 0x03	//!< Ring-Buffer is empty
-	};
 
 	DataBuffer();
 	virtual ~DataBuffer(){}
@@ -33,17 +27,17 @@ public:
 	 * @param	buf_size 	- Number of character
 	 * @return
 	 */
-	DataBuffer::Result get( uint8_t *buf, size_t buf_size );
+	size_t pop( byte *buf, size_t buf_size );
 
 	/*!
 	 *	@brief Add a character to the buffer
 	 */
-	DataBuffer::Result add( uint8_t value );
+	size_t push( byte value );
 
 	/*!
 	 * 	@brief Buffer will be cleared
 	 */
-	void reset();
+	void clear();
 
 	/*!
 	 *	@brief Current size of the buffer
@@ -55,8 +49,8 @@ public:
 #endif
 
 protected:
-	char data[BUFFER_SIZE+1]; // Addition one for termination string symbol
-	uint8_t write_index, read_index;
+	byte data[BUFFER_SIZE+1]; // Addition one for termination string symbol
+	size_t 	write_index, read_index;
 	boolean write_ahead;
 
 	void updateAHead();

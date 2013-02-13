@@ -13,12 +13,12 @@ DataBuffer::DataBuffer() : read_index(0), write_index(0), write_ahead(false)
 	data[BUFFER_SIZE] = '\0';
 }
 
-DataBuffer::Result DataBuffer::add( uint8_t value )
+size_t DataBuffer::push( byte value )
 {
 	if( size() == BUFFER_SIZE )
 	{
-		reset();
-		return DataBuffer::overflow;
+		clear();
+		return -1;
 
 	} else if( write_index == BUFFER_SIZE )
 	{
@@ -29,48 +29,43 @@ DataBuffer::Result DataBuffer::add( uint8_t value )
 
 	updateAHead();
 
-	return DataBuffer::successful;
+	return 1;
 }
 
-DataBuffer::Result DataBuffer::get( uint8_t *buf, size_t buf_size )
+size_t DataBuffer::pop( byte *buf, size_t buf_size )
 {
-//	printf("read_index:%d | write_index:%d | size: %d | ahead:%d \n", read_index, write_index, size(), write_ahead );
+	size_t curr_size = size();
+	size_t numRead = buf_size;
 
-	if( size() == 0 ){
+//	printf("read_index:%d | write_index:%d | size: %d | ahead:%d \n", read_index, write_index, curr_size, write_ahead );
+
+	if( curr_size == 0 ){
 		buf[0] ='\0';
-		return DataBuffer::empty;
+		return -1;
 	}
 
-	//! @note Buffer is bordered by a termination symbol; If we reach the border the return value is less than size
-	uint16_t num = snprintf( (char*) buf, buf_size+1, "%s", &data[read_index] );
+	//! Ensure, that only this will be read what is really available ;-)
+	if( buf_size > curr_size )
+		numRead = curr_size;
 
-	if( num >= buf_size )
+	//! If we reach the end of the buffer than we have to read from the beginning. So that#s idea of a ring buffer ;-)
+	if( (numRead + read_index) <= BUFFER_SIZE  )
 	{
-		//! Increment of read_index
-		read_index += buf_size;
-
-		//! Check, whether we read to much bytes
-		if( (read_index > write_index) && write_ahead )
-		{
-			num =  read_index - write_index;
-			read_index = write_index;
-			buf[buf_size-num] = '\0';
-		}
-
-	} else {
-		read_index = buf_size - num;
-
-		//! Check, whether we read to much bytes
-		if( read_index > write_index )
-			read_index = write_index;
-
-		snprintf( (char*) &buf[num], read_index+1, "%s", &data[0] );
+		memcpy((char*) &buf[0], &data[read_index], numRead );
+		read_index += numRead;
+	}else
+	{
+		size_t tmp = (BUFFER_SIZE - read_index);
+		memcpy((char*) &buf[0], &data[read_index], tmp );
+		memcpy((char*) &buf[tmp], &data[0], numRead - tmp );
+		read_index = (numRead-tmp);
+//		printf("read_index:%d | write_index:%d | tmp:%d \n", read_index, write_index, tmp );
 	}
 
 	//! If write_index equal read_index than we can reset the buffer
 	if( write_index == read_index )
 	{
-		reset();
+		clear();
 	} else if( read_index == BUFFER_SIZE )
 	{
 		read_index = 0;
@@ -78,10 +73,10 @@ DataBuffer::Result DataBuffer::get( uint8_t *buf, size_t buf_size )
 
 	updateAHead();
 
-	return DataBuffer::successful;
+	return numRead;
 }
 
-void DataBuffer::reset()
+void DataBuffer::clear()
 {
 	updateAHead();
 	write_index = 0;
