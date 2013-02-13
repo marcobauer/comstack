@@ -34,13 +34,13 @@ static const uint16_t crc16_table[256] =
     0x2e93, 0x3eb2, 0x0ed1, 0x1ef0
 };
 
-uint16_t checksumCRC16( uint8_t* start, uint8_t* end )
+uint16_t checksumCRC16( byte* start, byte* end )
 {
 	uint16_t  crcValue = 0;
 
 	if (end >= start)
 	{
-		uint8_t* pointer = 0; // local running pointer
+		byte* pointer = 0; // local running pointer
 		// clear result register of uC
 		// CRCD = 0;
 		// loop through the memory and put the bytes into uC calculation unit
