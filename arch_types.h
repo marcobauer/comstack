@@ -6,6 +6,7 @@
 
 #include <string.h>
 #include <Arduino.h>
+#include <HardwareSerial.h>
 
 #else
 
@@ -22,6 +23,7 @@ typedef uint8_t 				boolean;
 typedef uint8_t	 				byte;
 
 #include <stdio.h>
+#include <string.h>
 
 #endif
 
