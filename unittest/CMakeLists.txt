@@ -21,6 +21,7 @@ FIND_PACKAGE( CPPUNIT REQUIRED )
 FILE ( 	GLOB_RECURSE ComStackSrc 
 		${CMAKE_SOURCE_DIR}/../*.cpp 
 )
+
 ADD_LIBRARY( comstack STATIC ${ComStackSrc}	)
 include_directories( ${CMAKE_SOURCE_DIR}/.. )
 

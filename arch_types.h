@@ -27,4 +27,6 @@ typedef uint8_t	 				byte;
 
 #endif
 
+#include "common.h"
+
 #endif /* ARCH_TYPES_H_ */

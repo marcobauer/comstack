@@ -2,13 +2,15 @@
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/ui/text/TestRunner.h>
 
-#include "TestDataBuffer.h"
-#include "TestMessage.h"
+#include "TestRingBuffer.h"
+#include "TestMessageImpl.h"
+#include "TestMessageHandler.h"
 
 int main(int argc, char* argv[])
 {
 	CppUnit::TextUi::TestRunner runner;
-	runner.addTest( TestDataBuffer::suite() );
-	runner.addTest( TestMessage::suite() );
+//	runner.addTest( TestRingBuffer::suite() );
+	runner.addTest( TestMessageImpl::suite() );
+//	runner.addTest( TestMessageHandler::suite() );
 	runner.run();
 }

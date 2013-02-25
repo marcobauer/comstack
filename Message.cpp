@@ -1,83 +1,90 @@
-
 #include "Message.h"
 #include "checksum.h"
+#include "defines.h"
 
-#include "arch_types.h"
+using namespace ComStack;
 
-Message::Message()
-{}
-
-Message::Result Message::enqueueTx( Message::Data *msg  )
+Message::Message( Handler* cb ) : handler(cb), message_begin(NULL), contentSize(0), clear_type(Message::undef_type)
 {
-	txBuffer.push( STX );
-	txBuffer.push( (byte) msg->type );
-
-	uint16_t data_crc = checksumCRC16( &msg->content[0],  &msg->content[ msg->size-1 ] );
-	uint16_t data_cnt = incCounter(Message::transmit);
-
-	pushDLE( (byte)( data_cnt & 0xFF00 ) );
-	pushDLE( (byte)( data_cnt & 0x00FF ) );
-	pushDLE( (byte)( data_crc & 0xFF00 ) );
-	pushDLE( (byte)( data_crc & 0x00FF ) );
-	pushDLE( msg->size );
-	pushDLE( msg->id );
-
-	for( size_t i=0; i< msg->size; i++)
-		pushDLE( msg->content[i] );
-
-	txBuffer.push( ETX );
-
-	return Message::passed;
+	for( int i= 0; i< Message::num_of_msg_type; i++ )
+		seqCounter[i] = 0xFF;
 }
 
-void Message::enqueueRx( Message::Payload* msg )
+void Message::error( Error::Type error_id )
 {
-	for(int i=0; i< msg->size; i++)
-		rxBuffer.push(msg->content[i]);
+	if( !message_begin )// it is already
+		return;
 
+	ringBuffer.restore();
+	this->message_begin = NULL;
+	decSeqCounter( clear_type );
+	handler->error( error_id );
 }
 
-boolean Message::dequeueTx( Message::Payload * )
+byte Message::incSeqCounter( Message::Type type )
 {
-	return true;
+	if( seqCounter[type]++ == 0xFF)
+		seqCounter[type] = MSG_DLE_OFFSET ;
+
+	return seqCounter[type];
 }
 
-boolean Message::dequeueRx( Message::Data * )
+void Message::decSeqCounter( Message::Type type )
 {
-	return true;
+	if( seqCounter[type] == MSG_DLE_OFFSET )
+		seqCounter[type] = 0xFF;
+	else
+		seqCounter[type]--;
 }
 
-uint16_t Message::incCounter( Message::CounterTyp type)
+Iterator* Message::getContent()
 {
-	if( counter[type] == 0xFFFF)
+	if( this->message_begin == NULL )
 		return 0;
 
-	return counter[type]++;
+	return ringBuffer.iterator( &message_begin[MSG_POS_CONTENT], this->contentSize );
 }
 
-void Message::pushDLE( byte data )
+size_t 	Message::getContentSize()
 {
-	switch( data )
-	{
-		case STX:
-			txBuffer.push(DLE);
-			txBuffer.push(STX);
-			break;
+	if(! this->message_begin )
+		return 0;
 
-		case ETX:
-			txBuffer.push(DLE);
-			txBuffer.push(ETX);
-			break;
-
-		case DLE:
-			txBuffer.push(DLE);
-			txBuffer.push(DLE);
-			break;
-
-		default:
-			txBuffer.push( data );
-			break;
-
-	} // end of switch (character substitution)
-
+	return contentSize;
 }
+
+byte Message::getSeqCounter()
+{
+	if(! this->message_begin )
+		return 0;
+
+	return ringBuffer.valueOf( this->message_begin , MSG_POS_SCNT ) - MSG_DLE_OFFSET;
+}
+
+Instruction::Id Message::getInstructionId()
+{
+	if(! this->message_begin )
+		return Instruction::undef_id;
+
+	return (Instruction::Id) (ringBuffer.valueOf( this->message_begin , MSG_POS_ID ) - DLE);
+}
+
+Message::Type Message::getType()
+{
+	if(! this->message_begin )
+		return Message::undef_type;
+
+	return (Message::Type) (ringBuffer.valueOf( this->message_begin , MSG_POS_TYPE ) - DLE);
+}
+
+#ifdef UNITTEST
+
+boolean Message::pop(byte &value)
+{
+	if( ringBuffer.pop( &value, 1 ) == -1)
+		return false;
+
+	return true;
+}
+
+#endif
