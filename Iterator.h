@@ -2,7 +2,7 @@
 #ifndef ITERATOR_H_
 #define ITERATOR_H_
 
-#include "../arch_types.h"
+#include "arch_types.h"
 
 class Iterator {
 

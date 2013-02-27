@@ -15,8 +15,8 @@ public:
 
 private:
 	byte 	data_read(){ return 0xAA;}
-	size_t  data_write( byte data ){}
-	size_t 	data_write( byte *, byte ){}
+	size_t  data_write( byte data ){ return 0; }
+	size_t 	data_write( byte *, byte ){ return 0; }
 	boolean data_available(){ return true; }
 
 	void response( RxMessage *msg ){}

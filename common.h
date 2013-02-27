@@ -53,7 +53,8 @@ namespace ComStack {
 			led2			= (0x11),
 			led3			= (0x12),
 			uptime			= (0x13),
-			num_of_id		= (0x14)
+			startup			= (0x14),
+			num_of_id		= (0x15)
 		};
 
 	}  // namespace Instruction

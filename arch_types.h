@@ -2,13 +2,20 @@
 #ifndef ARCH_TYPES_H_
 #define ARCH_TYPES_H_
 
-#if defined(ARDUINO)
+#if defined (ANDROID)
+#include <stdint.h>
+
+typedef unsigned int  			size_t;
+typedef unsigned char 			boolean;
+typedef unsigned char 	 		byte;
+
+#elif defined(ARDUINO)
 
 #include <string.h>
 #include <Arduino.h>
 #include <HardwareSerial.h>
 
-#else
+#elif defined (UNITTEST)
 
 typedef signed char 			int8_t;
 typedef unsigned char 			uint8_t;

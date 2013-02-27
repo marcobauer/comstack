@@ -11,37 +11,7 @@ TxMessage* MessageHandler::newMessage( Message::Type type, Instruction::Id id )
 	return messageTx.create( type, id );
 }
 
-void MessageHandler::process()
-{
-	thread_read();
-	thread_write();
-	RxMessage *msgRx = messageRx.getMessage();
-	if( msgRx ){
-
-		switch( msgRx->getType() )
-		{
-			case Message::request:
-				request( msgRx );
-				msgRx->accept();
-				break;
-
-			case Message::response:
-				response( msgRx );
-				msgRx->accept();
-				break;
-
-			case Message::event:
-				event( msgRx );
-				msgRx->accept();
-				break;
-
-			default:
-				break;
-		}
-	}
-}
-
-void MessageHandler::thread_read()
+void MessageHandler::threadRead()
 {
 	/*!
 	 * 												Process received data
@@ -53,10 +23,35 @@ void MessageHandler::thread_read()
 			if( !messageRx.add( data_read() ) )
 				break;
 		}
+
+		RxMessage *msgRx = messageRx.getMessage();
+		if( msgRx )
+		{
+			switch( msgRx->getType() )
+			{
+				case Message::request:
+					request( msgRx );
+					msgRx->accept();
+					break;
+
+				case Message::response:
+					response( msgRx );
+					msgRx->accept();
+					break;
+
+				case Message::event:
+					event( msgRx );
+					msgRx->accept();
+					break;
+
+				default:
+					break;
+			}
+		}
 	}
 }
 
-void MessageHandler::thread_write()
+void MessageHandler::threadWrite()
 {
 	/*!
 	 * 												Process transmit data

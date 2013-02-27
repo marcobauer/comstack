@@ -4,7 +4,7 @@
 #include "TxMessage.h"
 #include "RxMessage.h"
 
-#include "abstract/Handler.h"
+#include "Handler.h"
 
 namespace ComStack {
 
@@ -15,14 +15,13 @@ public:
 	virtual ~MessageHandler(){}
 
 	TxMessage* 	newMessage( Message::Type, Instruction::Id );
-	void process();
+
+	void threadRead();
+	void threadWrite();
 
 #ifndef UNITTEST
 private:
 #endif
-
-	void thread_read();
-	void thread_write();
 
 	virtual byte 	data_read() = 0;
 	virtual size_t  data_write( byte ) = 0;

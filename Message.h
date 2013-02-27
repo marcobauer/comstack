@@ -3,7 +3,7 @@
 #define MESSAGE_H_
 
 #include "arch_types.h"
-#include "abstract/Handler.h"
+#include "Handler.h"
 #include "RingBuffer.h"
 
 namespace ComStack {

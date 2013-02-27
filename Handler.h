@@ -2,7 +2,7 @@
 #ifndef HANDLER_H_
 #define HANDLER_H_
 
-#include "../arch_types.h"
+#include "arch_types.h"
 
 namespace ComStack {
 
