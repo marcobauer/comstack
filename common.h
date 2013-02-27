@@ -2,11 +2,7 @@
 #ifndef COMMON_H_
 #define COMMON_H_
 
-#if defined(UNITTEST)
-#define BUFFER_SIZE 		(uint8_t) 50
-#else
-#define BUFFER_SIZE 		(uint8_t) 254
-#endif
+#include "config.h"
 
 namespace ComStack {
 
