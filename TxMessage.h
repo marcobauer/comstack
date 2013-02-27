@@ -16,7 +16,12 @@ public:
 	TxMessage( Handler* );
 	virtual ~TxMessage(){}
 
-	TxMessage* 	create( Message::Type, Instruction::Id );
+#ifndef SLIM_FRAME
+	TxMessage* create( Message::Type type, Instruction::Id id );
+#else
+	TxMessage* create();
+#endif
+
 	size_t  	send();
 	boolean 	add(byte);
 

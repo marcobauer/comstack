@@ -7,12 +7,18 @@ using namespace ComStack;
 TxMessage::TxMessage( Handler* cb ) : Message(cb)
 {
 }
-
+#ifndef SLIM_FRAME
 TxMessage* TxMessage::create( Message::Type type, Instruction::Id id )
+#else
+TxMessage* TxMessage::create()
+#endif
 {
-	byte seqCnt = incSeqCounter(type);
 	this->contentSize = 0;
+
+#ifndef SLIM_FRAME
+	byte seqCnt = incSeqCounter(type);
 	this->clear_type  = type;
+#endif
 
 	// At least, free space of MSG_FRAME_SIZE is required
 	if( ringBuffer.free() < MSG_FRAME_SIZE )
@@ -21,19 +27,24 @@ TxMessage* TxMessage::create( Message::Type type, Instruction::Id id )
 		return NULL;
 	}
 
+#ifndef SLIM_FRAME
 	if( (byte) id > (0xFF-DLE))
 	{
 		error(Error::msg_invalid_id);
 		return NULL;
 	}
+#endif
 
 	ringBuffer.save();
 	ringBuffer.push( DCTL );
 	this->message_begin = ringBuffer.pointer(RingBuffer::head, 0 );
 	ringBuffer.push( SMSG );
+
+#ifndef SLIM_FRAME
 	ringBuffer.push( type + DLE );
 	ringBuffer.push( id + DLE );
 	ringBuffer.push( seqCnt );
+#endif
 
 	return this;
 }
@@ -47,10 +58,13 @@ size_t TxMessage::send()
 		return 0;
 	}
 
+#ifndef SLIM_FRAME
 	uint16_t data_crc = calcCRC16( ringBuffer.iteratorHead() );
 	result = ringBuffer.push( DCTL, ECNT );
 	result = insertDLE( (byte)( (data_crc >> 8) & 0xFF ) );
 	result = insertDLE( (byte)( (data_crc & 0xFF) ) );
+#endif
+
 	result = ringBuffer.push( DCTL, EMSG );
 
 	if( !result )
@@ -107,10 +121,11 @@ boolean TxMessage::insertDLE( byte value )
 			result = ringBuffer.push( DLE, EMSG );
 			break;
 
+#ifndef SLIM_FRAME
 		case ECNT:
 			result = ringBuffer.push( DLE, ECNT );
 			break;
-
+#endif
 		case DLE:
 			result = ringBuffer.push( DLE, DLE );
 			break;

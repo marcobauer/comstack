@@ -6,10 +6,21 @@ using namespace ComStack;
 MessageHandler::MessageHandler() : messageRx( this ), messageTx( this )
 {}
 
+#ifndef SLIM_FRAME
+
 TxMessage* MessageHandler::newMessage( Message::Type type, Instruction::Id id )
 {
 	return messageTx.create( type, id );
 }
+
+#else
+
+TxMessage* MessageHandler::newMessage()
+{
+	return messageTx.create();
+}
+
+#endif
 
 void MessageHandler::threadRead()
 {
@@ -25,8 +36,14 @@ void MessageHandler::threadRead()
 		}
 
 		RxMessage *msgRx = messageRx.getMessage();
+
 		if( msgRx )
 		{
+#ifdef SLIM_FRAME
+
+			rxMsgCallback( msgRx );
+
+#else
 			switch( msgRx->getType() )
 			{
 				case Message::request:
@@ -47,6 +64,8 @@ void MessageHandler::threadRead()
 				default:
 					break;
 			}
+#endif
+
 		}
 	}
 }

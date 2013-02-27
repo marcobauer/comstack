@@ -4,10 +4,14 @@
 
 using namespace ComStack;
 
-Message::Message( Handler* cb ) : handler(cb), message_begin(NULL), contentSize(0), clear_type(Message::undef_type)
+Message::Message( Handler* cb ) : handler(cb), message_begin(NULL), contentSize(0)
 {
+#ifndef SLIM_FRAME
+	clear_type = Message::undef_type;
 	for( int i= 0; i< Message::num_of_msg_type; i++ )
 		seqCounter[i] = 0xFF;
+
+#endif
 }
 
 void Message::error( Error::Type error_id )
@@ -17,24 +21,12 @@ void Message::error( Error::Type error_id )
 
 	ringBuffer.restore();
 	this->message_begin = NULL;
+
+#ifndef SLIM_FRAME
 	decSeqCounter( clear_type );
+#endif
+
 	handler->error( error_id );
-}
-
-byte Message::incSeqCounter( Message::Type type )
-{
-	if( seqCounter[type]++ == 0xFF)
-		seqCounter[type] = MSG_DLE_OFFSET ;
-
-	return seqCounter[type];
-}
-
-void Message::decSeqCounter( Message::Type type )
-{
-	if( seqCounter[type] == MSG_DLE_OFFSET )
-		seqCounter[type] = 0xFF;
-	else
-		seqCounter[type]--;
 }
 
 Iterator* Message::getContent()
@@ -51,6 +43,24 @@ size_t 	Message::getContentSize()
 		return 0;
 
 	return contentSize;
+}
+
+#ifndef SLIM_FRAME
+
+byte Message::incSeqCounter( Message::Type type )
+{
+	if( seqCounter[type]++ == 0xFF)
+		seqCounter[type] = MSG_DLE_OFFSET ;
+
+	return seqCounter[type];
+}
+
+void Message::decSeqCounter( Message::Type type )
+{
+	if( seqCounter[type] == MSG_DLE_OFFSET )
+		seqCounter[type] = 0xFF;
+	else
+		seqCounter[type]--;
 }
 
 byte Message::getSeqCounter()
@@ -76,6 +86,8 @@ Message::Type Message::getType()
 
 	return (Message::Type) (ringBuffer.valueOf( this->message_begin , MSG_POS_TYPE ) - DLE);
 }
+
+#endif
 
 #ifdef UNITTEST
 

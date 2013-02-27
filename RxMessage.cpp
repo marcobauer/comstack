@@ -31,9 +31,13 @@ boolean RxMessage::add( byte value )
 
 RxMessage* RxMessage::getMessage()
 {
+#ifndef SLIM_FRAME
 	byte *cnt_end, *crc_begin, *crc_end;
+	size_t offset2=0;
+#endif
+
 	Iterator *it;
-	size_t offset=0, offset2=0, offset3=0;
+	size_t offset=0, offset3=0;
 
 	if(ringBuffer.size() == 0)
 		return NULL;
@@ -43,7 +47,10 @@ RxMessage* RxMessage::getMessage()
 
 	this->message_begin = find( it, offset, SMSG );
 //	printf("SMSG-Index: %02d - Offset: %02d \n", ringBuffer.indexOf(this->message_begin), offset );
+
+#ifndef SLIM_FRAME
 	crc_begin = it->prev();
+#endif
 
 	if( (this->message_begin == NULL) && (ringBuffer.free() == 0) )
 	{	// No start symbol is present but the buffer is full
@@ -54,6 +61,7 @@ RxMessage* RxMessage::getMessage()
 		return NULL;
 	}
 
+#ifndef SLIM_FRAME
 	cnt_end = find( it, offset2, ECNT );
 //	printf("ECNT-Index: %02d - Offset: %02d\n", ringBuffer.indexOf(cnt_end), offset2 );
 	crc_end = it->prev();
@@ -64,6 +72,7 @@ RxMessage* RxMessage::getMessage()
 		error(Error::msg_rx_no_data);
 		return NULL;
 	}
+#endif
 
 	message_end = find( it, offset3, EMSG );
 //	printf("EMSG-Index: %02d - Offset: %02d\n", ringBuffer.indexOf(message_end), offset3 );
@@ -80,7 +89,7 @@ RxMessage* RxMessage::getMessage()
 		handler->warn(Warning::buffer_rx_cleanup);
 		ringBuffer.remove(offset-1); // decrement by 1; Remove everything in front of the start symbol
 	}
-
+#ifndef SLIM_FRAME
 	ringBuffer.trim( cnt_end, message_end, DLE );
 
 	uint16_t crcValue = (uint16_t) (( (uint16_t)( ringBuffer.valueOf(cnt_end,1) << 8) & 0xFF00 ) | ( ringBuffer.valueOf(cnt_end,2) & 0x00FF ) );
@@ -90,7 +99,11 @@ RxMessage* RxMessage::getMessage()
 		return NULL;
 	}
 
-	this->contentSize = ringBuffer.trim( this->message_begin, crc_end, DLE ) - MSG_POS_CONTENT;
+	this->contentSize = ringBuffer.trim( message_begin, crc_end, DLE ) - MSG_POS_CONTENT;
+#else
+	this->contentSize = ringBuffer.trim( message_begin, message_end, DLE ) - MSG_POS_CONTENT;
+#endif
+
 	if( this->contentSize == 0 )
 		return NULL;
 

@@ -3,7 +3,6 @@
 
 #include "TxMessage.h"
 #include "RxMessage.h"
-
 #include "Handler.h"
 
 namespace ComStack {
@@ -14,7 +13,11 @@ public:
 	MessageHandler();
 	virtual ~MessageHandler(){}
 
-	TxMessage* 	newMessage( Message::Type, Instruction::Id );
+#ifndef SLIM_FRAME
+	TxMessage* newMessage( Message::Type, Instruction::Id );
+#else
+	TxMessage* newMessage();
+#endif
 
 	void threadRead();
 	void threadWrite();

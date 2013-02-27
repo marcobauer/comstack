@@ -14,6 +14,8 @@ public:
 	Message( Handler* );
 	virtual ~Message(){}
 
+#ifndef SLIM_FRAME
+
 	enum Type{
 		undef_type		= (0x00),
 		request 		= (0x01), 	// Request
@@ -24,14 +26,22 @@ public:
 		num_of_msg_type = (0x06)
 	};
 
+#endif
+
 public:
+
+#ifndef SLIM_FRAME
 
 	Instruction::Id 	getInstructionId();
 	Message::Type 		getType();
 	byte 				getSeqCounter();
+	byte 				getSeqCounter( Message::Type type ){ return seqCounter[type]; }
+
+#endif
+
 	size_t 				getContentSize();
 	Iterator*			getContent();
-	byte 				getSeqCounter( Message::Type type ){ return seqCounter[type]; }
+
 
 #ifdef UNITTEST
 	boolean pop(byte &);
@@ -43,13 +53,16 @@ protected:
 
 	void			error( Error::Type );
 
+#ifndef SLIM_FRAME
 	byte 			seqCounter[Message::num_of_msg_type];
 	byte 			incSeqCounter( Message::Type );
 	void			decSeqCounter( Message::Type );
+	Message::Type 	clear_type;
+#endif
 
 	size_t 			contentSize;
 	byte        	*message_begin;
-	Message::Type 	clear_type;
+
 	Handler* 		handler;
 	RingBuffer 		ringBuffer;
 };
