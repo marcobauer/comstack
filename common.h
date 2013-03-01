@@ -23,13 +23,11 @@ namespace ComStack {
 	};
 
 	namespace Warning {
-
 		enum Type {
 			buffer_tx_overload	= (0x00),
 			buffer_rx_overload	= (0x01),
 			buffer_rx_cleanup	= (0x02)
 		};
-
 	};
 
 	namespace Instruction {

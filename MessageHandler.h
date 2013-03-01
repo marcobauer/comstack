@@ -4,6 +4,7 @@
 #include "TxMessage.h"
 #include "RxMessage.h"
 #include "Handler.h"
+#include "config.h"
 
 namespace ComStack {
 
